@@ -1,7 +1,7 @@
 name: muncipal_operator_apk
 description: Municipal Operator APK - separate operator application for GSM, LoRa, MAP and RS485 valve operation.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   cupertino_icons: ^1.0.8
+  mqtt_client: ^10.11.11
 
 dev_dependencies:
   flutter_test:
