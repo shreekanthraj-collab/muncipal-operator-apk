@@ -320,7 +320,6 @@ class _ValveState extends State<Valve> {
               ),
             ),
             Card(child: SwitchListTile(title: const Text('Low Voltage Bypass'), value: bypass, onChanged: (x) => setState(() => bypass = x))),
-            Card(child: ListTile(title: const Text('Firmware / OTA'), trailing: FilledButton(onPressed: () {}, child: const Text('OTA')))),
             Card(child: ListTile(title: const Text('OWNER REBIND'), onTap: () {})),
           ],
         ),
