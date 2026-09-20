@@ -247,6 +247,37 @@ class Lora extends StatelessWidget {
   Widget build(BuildContext context) => const Valve(title: 'LoRa Valve Control', type: 'LoRa');
 }
 
+class ValveStatus {
+  final bool ocTrip;
+  final bool ocLocked;
+  final bool lowVoltage;
+  final bool lowVoltageBypass;
+  final double currentA;
+  final double voltageV;
+
+  const ValveStatus({
+    this.ocTrip = false,
+    this.ocLocked = false,
+    this.lowVoltage = false,
+    this.lowVoltageBypass = false,
+    this.currentA = 0.0,
+    this.voltageV = 0.0,
+  });
+
+  factory ValveStatus.fromJson(Map<String, dynamic> json) {
+    final faults = Map<String, dynamic>.from(json['faults'] ?? const {});
+    final electrical = Map<String, dynamic>.from(json['electrical'] ?? const {});
+    return ValveStatus(
+      ocTrip: faults['oc_trip'] == true,
+      ocLocked: faults['oc_locked'] == true,
+      lowVoltage: faults['low_voltage'] == true,
+      lowVoltageBypass: faults['low_voltage_bypass'] == true,
+      currentA: (electrical['current_a'] as num?)?.toDouble() ?? 0.0,
+      voltageV: (electrical['voltage_v'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
 class Valve extends StatefulWidget {
   final String title; final String type;
   const Valve({super.key, required this.title, required this.type});
@@ -258,6 +289,11 @@ class _ValveState extends State<Valve> {
   double pos = 0;
   bool bypass = false;
   bool schedule = false;
+  ValveStatus status = const ValveStatus();
+
+  void applyStatusJson(Map<String, dynamic> json) {
+    setState(() => status = ValveStatus.fromJson(json));
+  }
 
   Widget statBox(String title, String value, {IconData? icon}) => Expanded(child: Container(
     padding: const EdgeInsets.all(10),
@@ -328,11 +364,85 @@ class _ValveState extends State<Valve> {
 
           calibration(),
 
-          Card(child: Padding(padding: const EdgeInsets.all(10), child: Row(children: [
-            statBox('Voltage', '11.50 V', icon: Icons.bolt),
-            const SizedBox(width: 8),
-            statBox('Over Current', 'Trip 5.0 A / Reset 6.0 A', icon: Icons.monitor_heart),
-          ]))),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(children: [
+                    statBox(
+                      'Voltage',
+                      status.voltageV > 0 ? '${status.voltageV.toStringAsFixed(2)} V' : '11.50 V',
+                      icon: Icons.bolt,
+                    ),
+                    const SizedBox(width: 8),
+                    statBox('Over Current', 'Trip 5.0 A / Reset 6.0 A', icon: Icons.monitor_heart),
+                  ]),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: status.ocTrip ? kRed.withOpacity(0.10) : kGreen.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: status.ocTrip ? kRed : kGreen, width: 1.5),
+                    ),
+                    child: Row(children: [
+                      Icon(Icons.circle, size: 15, color: status.ocTrip ? kRed : kGreen),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          status.ocTrip ? 'FAULT  /  OC TRIP' : 'OC STATUS  /  NORMAL',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: status.ocTrip ? kRed : kGreen,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${status.currentA.toStringAsFixed(2)} A',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => setState(() => bypass = !bypass),
+                      icon: Icon(status.lowVoltageBypass ? Icons.warning_amber_rounded : Icons.bolt),
+                      label: Text(
+                        status.lowVoltageBypass
+                            ? 'LOW VOLTAGE BYPASS ACTIVE'
+                            : (bypass ? 'VOLTAGE BYPASS REQUESTED' : 'VOLTAGE BYPASS'),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: status.lowVoltageBypass || bypass ? kOrange : kBlue,
+                        minimumSize: const Size(0, 52),
+                      ),
+                    ),
+                  ),
+                  if (status.lowVoltageBypass || status.lowVoltage)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(children: [
+                        Icon(Icons.warning_amber_rounded, color: kOrange, size: 19),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            status.lowVoltageBypass
+                                ? 'LOW VOLTAGE BYPASS ACTIVE'
+                                : 'LOW VOLTAGE DETECTED',
+                            style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.deepOrange),
+                          ),
+                        ),
+                      ]),
+                    ),
+                ],
+              ),
+            ),
+          ),
 
           Card(child: Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Row(children: [Icon(Icons.schedule, color: kBlue), SizedBox(width: 8), Text('Scheduling / Clock', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.indigo))]),
