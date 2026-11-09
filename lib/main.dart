@@ -64,6 +64,7 @@ class App extends StatelessWidget {
         ),
       ),
       home: const Login(),
+      routes: {'/home': (_) => const Home()},
     );
   }
 }
