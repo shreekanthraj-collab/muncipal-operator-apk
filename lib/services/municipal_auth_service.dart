@@ -117,6 +117,10 @@ class MunicipalAuthService {
     final session = MunicipalSession.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
+    if (session.accessToken.isEmpty || session.organizationId.isEmpty ||
+        session.phone.isEmpty || session.expiresInSeconds <= 0) {
+      throw const MunicipalAuthException('Server returned an incomplete authenticated session.');
+    }
     await _saveSession(session);
     return session;
   }
