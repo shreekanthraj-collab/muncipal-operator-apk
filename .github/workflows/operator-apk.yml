@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - feat/operator-frozen-baseline
+      - feat/recover-operator-login-ui
 
 jobs:
   build-apk:
