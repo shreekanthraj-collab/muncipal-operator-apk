@@ -90,7 +90,7 @@ class _LoginState extends State<Login> {
               const Icon(Icons.water_drop, color: Colors.lightBlue, size: 92),
               const SizedBox(height: 22),
               const Text(
-                'Smart Valve\\nManagement',
+                'Smart Valve\nManagement',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 38, height: 1.16, fontWeight: FontWeight.w500, color: Color(0xFF171923)),
               ),
@@ -169,7 +169,7 @@ class _LoginState extends State<Login> {
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.fingerprint, size: 27),
-                          label: const Text('LOGIN WITH\\nFINGERPRINT', textAlign: TextAlign.left,
+                          label: const Text('LOGIN WITH\nFINGERPRINT', textAlign: TextAlign.left,
                               style: TextStyle(fontSize: 18, height: 1.35)),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: _loginBlue,
@@ -188,7 +188,7 @@ class _LoginState extends State<Login> {
                             SizedBox(width: 14),
                             Expanded(
                               child: Text(
-                                'Phone / mobile change\\nRe-authentication is required if the app mobile number or phone changes.',
+                                'Phone / mobile change\nRe-authentication is required if the app mobile number or phone changes.',
                                 style: TextStyle(fontSize: 18, height: 1.45),
                               ),
                             ),
