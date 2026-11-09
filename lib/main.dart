@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'screens/operator_login_screen.dart';
+import 'screens/rs485_modbus_screen.dart';
 
 const Color kBlue = Color(0xFF2B6F9F);
 const Color kPage = Color(0xFFF7F7FF);
@@ -188,6 +189,10 @@ class _HomeState extends State<Home> {
             ]),
             const SizedBox(height: 14),
             Btn('MAP View', Icons.map, () => nav(3)),
+            const SizedBox(height: 14),
+            Btn('RS485 / MODBUS', Icons.device_hub, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const Rs485ModbusScreen()));
+            }),
           ],
         ))),
       ),
