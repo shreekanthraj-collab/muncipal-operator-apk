@@ -13,6 +13,7 @@ dependencies:
   mqtt_client: ^10.11.11
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:
