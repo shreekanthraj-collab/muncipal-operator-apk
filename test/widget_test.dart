@@ -3,7 +3,7 @@ import 'package:muncipal_operator_apk/main.dart';
 
 void main() {
   testWidgets('operator app starts at login page', (tester) async {
-    await tester.pumpWidget(const MunicipalOperatorApp());
+    await tester.pumpWidget(const App());
 
     expect(find.text('Login'), findsOneWidget);
     expect(find.text('Admin'), findsNothing);
