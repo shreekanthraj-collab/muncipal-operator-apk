@@ -67,8 +67,8 @@ class App extends StatelessWidget {
   }
 }
 
-class Login extends StatelessWidget {
-  const Login({super.key});
+class LegacyLogin extends StatelessWidget {
+  const LegacyLogin({super.key});
 
   @override
   Widget build(BuildContext context) {
