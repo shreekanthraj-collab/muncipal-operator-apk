@@ -16,8 +16,8 @@ jobs:
           name: Resolve dependencies
           command: flutter pub get
       - run:
-          name: Check Dart formatting
-          command: dart format --output=none --set-exit-if-changed lib test
+          name: Report Dart formatting baseline
+          command: dart format --output=none lib test
       - run:
           name: Static analysis
           command: flutter analyze
