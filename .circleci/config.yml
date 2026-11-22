@@ -1,0 +1,34 @@
+version: 2.1
+
+jobs:
+  flutter_validate:
+    docker:
+      - image: ghcr.io/cirruslabs/flutter:stable
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Flutter and Dart versions
+          command: |
+            flutter --version
+            dart --version
+      - run:
+          name: Resolve dependencies
+          command: flutter pub get
+      - run:
+          name: Check Dart formatting
+          command: dart format --output=none --set-exit-if-changed lib test
+      - run:
+          name: Static analysis
+          command: flutter analyze
+      - run:
+          name: Flutter tests
+          command: flutter test
+      - run:
+          name: Build debug APK
+          command: flutter build apk --debug
+
+workflows:
+  validate_operator_apk:
+    jobs:
+      - flutter_validate
