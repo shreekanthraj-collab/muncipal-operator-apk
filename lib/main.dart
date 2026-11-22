@@ -219,7 +219,7 @@ class Shell extends StatelessWidget {
       if (i == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Gsm()));
       if (i == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Lora()));
       if (i == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MapPage()));
-      if (i == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Rs485Page()));
+      if (i == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Shell(index: 4, child: Rs485Page())));
     }),
   );
 }
