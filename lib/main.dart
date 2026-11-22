@@ -235,7 +235,7 @@ class _HomeState extends State<Home> {
 
   Future<void> refresh() async {
     setState(() => inventory = municipalApi.registeredValves());
-    await inventory;
+    try { await inventory; } catch (_) { /* FutureBuilder renders the API error. */ }
   }
 
   void logout() {
@@ -275,16 +275,18 @@ class _HomeState extends State<Home> {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
             final valves = snapshot.data!;
             final zones = valves.map((v) => v.zoneId).where((v) => v.isNotEmpty).toSet().toList()..sort();
+            final activeZone = zones.contains(selectedZone) ? selectedZone : null;
             final wards = valves
-                .where((v) => selectedZone == null || v.zoneId == selectedZone)
+                .where((v) => activeZone == null || v.zoneId == activeZone)
                 .map((v) => v.wardId)
                 .where((v) => v.isNotEmpty)
                 .toSet()
                 .toList()
               ..sort();
+            final activeWard = wards.contains(selectedWard) ? selectedWard : null;
             final scoped = valves.where((v) =>
-                (selectedZone == null || v.zoneId == selectedZone) &&
-                (selectedWard == null || v.wardId == selectedWard)).toList();
+                (activeZone == null || v.zoneId == activeZone) &&
+                (activeWard == null || v.wardId == activeWard)).toList();
 
             if (tab == 1) return ValvePage(title: 'GSM / LTE Valve Control', valves: scoped.where((v) => !v.isLora).toList());
             if (tab == 2) return ValvePage(title: 'LoRa Valve Control', valves: scoped.where((v) => v.isLora).toList());
@@ -300,7 +302,7 @@ class _HomeState extends State<Home> {
                         style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600, height: 1.15)),
                     const SizedBox(height: 24),
                     DropdownButtonFormField<String>(
-                      value: selectedZone,
+                      value: activeZone,
                       decoration: const InputDecoration(labelText: 'Zone No'),
                       items: zones.map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(),
                       onChanged: (x) => setState(() {
@@ -310,7 +312,7 @@ class _HomeState extends State<Home> {
                     ),
                     const SizedBox(height: 18),
                     DropdownButtonFormField<String>(
-                      value: selectedWard,
+                      value: activeWard,
                       decoration: const InputDecoration(labelText: 'Ward No'),
                       items: wards.map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(),
                       onChanged: (x) => setState(() => selectedWard = x),
