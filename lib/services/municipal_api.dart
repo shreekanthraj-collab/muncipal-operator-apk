@@ -9,6 +9,11 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+String _normalizeValveType(dynamic value) {
+  final normalized = (value ?? 'DISTRIBUTION').toString().trim().toUpperCase();
+  return normalized == 'MAIN' ? 'MAIN' : 'DISTRIBUTION';
+}
+
 class MunicipalValve {
   final String valveId;
   final String transport;
@@ -141,11 +146,6 @@ class MunicipalApi {
         .toList(growable: false);
   }
 
-
-  static String _normalizeValveType(dynamic value) {
-    final normalized = (value ?? 'DISTRIBUTION').toString().trim().toUpperCase();
-    return normalized == 'MAIN' ? 'MAIN' : 'DISTRIBUTION';
-  }
 
   static void _validateValveType(String valveType) {
     if (valveType != 'MAIN' && valveType != 'DISTRIBUTION') {
