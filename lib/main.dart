@@ -157,6 +157,7 @@ class _HomeState extends State<Home> {
     if (tab == 1) return const Shell(index: 1, child: Gsm());
     if (tab == 2) return const Shell(index: 2, child: Lora());
     if (tab == 3) return const Shell(index: 3, child: MapPage());
+    if (tab == 4) return const Shell(index: 4, child: Rs485Page());
 
     return Scaffold(
       appBar: AppBar(title: const Text('Smart Valve Management', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w500))),
@@ -187,6 +188,8 @@ class _HomeState extends State<Home> {
             ]),
             const SizedBox(height: 14),
             Btn('MAP View', Icons.map, () => nav(3)),
+            const SizedBox(height: 14),
+            Btn('RS485 / MODBUS View', Icons.cable, () => nav(4)),
           ],
         ))),
       ),
@@ -216,6 +219,7 @@ class Shell extends StatelessWidget {
       if (i == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Gsm()));
       if (i == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Lora()));
       if (i == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MapPage()));
+      if (i == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Rs485Page()));
     }),
   );
 }
@@ -231,6 +235,7 @@ class Nav extends StatelessWidget {
       NavigationDestination(icon: Icon(Icons.cell_tower), label: 'GSM'),
       NavigationDestination(icon: Icon(Icons.cell_tower), label: 'LoRa'),
       NavigationDestination(icon: Icon(Icons.map), label: 'MAP'),
+      NavigationDestination(icon: Icon(Icons.cable), label: 'RS485'),
     ],
   );
 }
@@ -513,5 +518,96 @@ class _MapState extends State<MapPage> {
         for (final v in valves) ListTile(leading: const Icon(Icons.location_pin, color: Colors.red, size: 34), title: Text('Valve ID: $v', style: const TextStyle(fontSize: 18)), subtitle: const Text('Latitude / Longitude'), trailing: const Icon(Icons.link)),
       ])),
     ]),
+  );
+}
+
+
+// Page 5: manufacturer-independent RS485 / Modbus device view.
+class Rs485Device {
+  final int slot, slaveId, baud, startRegister, registerCount;
+  final String make, model, parity, measurement, unit, status;
+  final bool configured;
+  const Rs485Device({required this.slot,this.slaveId=0,this.baud=9600,this.startRegister=0,this.registerCount=1,this.make='',this.model='',this.parity='None',this.measurement='',this.unit='',this.status='EMPTY',this.configured=false});
+}
+
+class Rs485Page extends StatefulWidget {
+  const Rs485Page({super.key});
+  @override State<Rs485Page> createState()=>_Rs485PageState();
+}
+class _Rs485PageState extends State<Rs485Page> {
+  final List<Rs485Device> devices=List.generate(8,(i)=>Rs485Device(slot:i+1));
+
+  Future<void> configure(Rs485Device d) async {
+    final make=TextEditingController(text:d.make), model=TextEditingController(text:d.model);
+    final slave=TextEditingController(text:d.slaveId==0?'':d.slaveId.toString());
+    final baud=TextEditingController(text:d.baud.toString());
+    final reg=TextEditingController(text:d.startRegister.toString());
+    final count=TextEditingController(text:d.registerCount.toString());
+    final measure=TextEditingController(text:d.measurement), unit=TextEditingController(text:d.unit);
+    String parity=d.parity;
+    final result=await showDialog<Rs485Device>(context:context,builder:(dc)=>StatefulBuilder(builder:(ctx,setD)=>AlertDialog(
+      title:Text('Configure RS485 Slot '+d.slot.toString()),
+      content:SizedBox(width:480,child:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
+        const Info('The sensor remains sealed. Use its manufacturer Modbus manual or a verified driver profile. Never guess register addresses or scaling.'),
+        const SizedBox(height:8),TextField(controller:make,decoration:const InputDecoration(labelText:'Manufacturer')),
+        const SizedBox(height:8),TextField(controller:model,decoration:const InputDecoration(labelText:'Model')),
+        const SizedBox(height:8),TextField(controller:slave,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Slave ID (1–247)')),
+        const SizedBox(height:8),TextField(controller:baud,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Baud rate')),
+        const SizedBox(height:8),DropdownButtonFormField<String>(value:parity,decoration:const InputDecoration(labelText:'Parity'),items:['None','Even','Odd'].map((x)=>DropdownMenuItem(value:x,child:Text(x))).toList(),onChanged:(x)=>setD(()=>parity=x??'None')),
+        const SizedBox(height:8),TextField(controller:reg,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Start register address (decimal)')),
+        const SizedBox(height:8),TextField(controller:count,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Register count')),
+        const SizedBox(height:8),TextField(controller:measure,decoration:const InputDecoration(labelText:'Measurement name')),
+        const SizedBox(height:8),TextField(controller:unit,decoration:const InputDecoration(labelText:'Engineering unit')),
+      ]))),
+      actions:[
+        TextButton(onPressed:()=>Navigator.pop(dc),child:const Text('CANCEL')),
+        FilledButton(onPressed:(){
+          final id=int.tryParse(slave.text), b=int.tryParse(baud.text), r=int.tryParse(reg.text), n=int.tryParse(count.text);
+          if(make.text.trim().isEmpty||model.text.trim().isEmpty||id==null||id<1||id>247||b==null||b<1200||r==null||r<0||r>65535||n==null||n<1||n>125){
+            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content:Text('Enter valid manufacturer, model and Modbus settings.')));return;
+          }
+          Navigator.pop(dc,Rs485Device(slot:d.slot,make:make.text.trim(),model:model.text.trim(),slaveId:id,baud:b,parity:parity,startRegister:r,registerCount:n,measurement:measure.text.trim(),unit:unit.text.trim(),status:'CONFIGURED',configured:true));
+        },child:const Text('SAVE CONFIG')),
+      ],
+    )));
+    if(result!=null&&mounted){setState(()=>devices[d.slot-1]=result);ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Saved as a local draft. Gateway/server sync is not connected yet.')));}
+    for(final x in [make,model,slave,baud,reg,count,measure,unit]){x.dispose();}
+  }
+
+  void scanInfo()=>showDialog<void>(context:context,builder:(ctx)=>AlertDialog(
+    title:const Text('Scan RS485 Devices'),
+    content:const Text('A gateway scan can discover responding Modbus slave IDs. It cannot identify manufacturer/model or infer register maps. Live scan requires gateway/server discovery integration.'),
+    actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('CLOSE'))],
+  ));
+
+  Widget deviceCard(Rs485Device d){
+    final color=d.status=='ONLINE'?kGreen:d.status=='OFFLINE'?kRed:Colors.blueGrey;
+    return Card(color:Colors.white,child:Padding(padding:const EdgeInsets.all(12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Row(children:[
+        Container(width:40,height:40,alignment:Alignment.center,decoration:BoxDecoration(color:Colors.blueGrey.shade100,borderRadius:BorderRadius.circular(10)),child:Text(d.slot.toString(),style:const TextStyle(fontSize:18,fontWeight:FontWeight.w700))),
+        const SizedBox(width:12),Expanded(child:Text(d.configured?(d.measurement.isEmpty?d.model:d.measurement):'RS485 Device Slot',style:const TextStyle(fontSize:17,fontWeight:FontWeight.w600))),
+        Container(padding:const EdgeInsets.symmetric(horizontal:13,vertical:8),decoration:BoxDecoration(border:Border.all(color:color.withOpacity(.5)),borderRadius:BorderRadius.circular(9)),child:Text(d.status,style:TextStyle(color:color,fontWeight:FontWeight.w600))),
+      ]),
+      const SizedBox(height:12),
+      Text(d.configured?'Slave ID: '+d.slaveId.toString()+'  •  '+d.make+'  •  Model: '+d.model:'Slot '+d.slot.toString()+'  •  No device configured',style:TextStyle(color:Colors.grey.shade600,fontSize:13)),
+      const SizedBox(height:10),
+      Row(children:[const Text('VALUE',style:TextStyle(fontSize:11,fontWeight:FontWeight.w700)),const SizedBox(width:8),const Text('--',style:TextStyle(fontSize:16,fontWeight:FontWeight.w600)),if(d.unit.isNotEmpty)Text(' '+d.unit),const Spacer(),TextButton.icon(onPressed:()=>configure(d),icon:const Icon(Icons.settings,size:18),label:Text(d.configured?'CONFIG':'ADD / CONFIG'))]),
+    ])));
+  }
+
+  @override Widget build(BuildContext context)=>Scaffold(
+    appBar:AppBar(centerTitle:true,leading:IconButton(icon:const Icon(Icons.arrow_back),onPressed:()=>Navigator.maybePop(context)),title:const Text('RS485 / MODBUS',style:TextStyle(fontSize:22,fontWeight:FontWeight.w500))),
+    body:ListView(padding:const EdgeInsets.fromLTRB(20,8,20,20),children:[
+      Row(children:[const Expanded(child:Text('RS485 Device Management',style:TextStyle(fontSize:19,fontWeight:FontWeight.w600))),OutlinedButton.icon(onPressed:scanInfo,icon:const Icon(Icons.search),label:const Text('SCAN'))]),
+      const SizedBox(height:8),const Info('Eight fixed Modbus slots. Different manufacturers are supported through verified driver profiles and documented register maps.'),
+      const SizedBox(height:8),for(final d in devices)deviceCard(d),
+    ]),
+    bottomNavigationBar:Nav(index:4,onTap:(i){
+      if(i==0)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Home()));
+      if(i==1)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Gsm()));
+      if(i==2)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Lora()));
+      if(i==3)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const MapPage()));
+      if(i==4)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Rs485Page()));
+    }),
   );
 }
