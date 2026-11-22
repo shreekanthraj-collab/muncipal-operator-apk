@@ -172,9 +172,13 @@ class MunicipalApi {
     required String zoneId,
     required double latitude,
     required double longitude,
+    required String transportType,
     String valveType = 'DISTRIBUTION',
   }) async {
     _validateValveType(valveType);
+    if (transportType != 'GSM' && transportType != 'LORA') {
+      throw ArgumentError.value(transportType, 'transportType');
+    }
     final result = await _request(
       'POST',
       '/api/v1/municipal/valves/register-placement',
@@ -184,6 +188,7 @@ class MunicipalApi {
         'ward_id': wardId,
         'zone_id': zoneId,
         'valve_type': valveType,
+        'transport_type': transportType,
         'latitude': latitude,
         'longitude': longitude,
       },
