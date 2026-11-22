@@ -611,25 +611,19 @@ class _Rs485PageState extends State<Rs485Page> {
   }
 
   @override Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(centerTitle:true,leading:IconButton(icon:const Icon(Icons.arrow_back),onPressed:()=>Navigator.maybePop(context)),title:const Text('RS485 / MODBUS',style:TextStyle(fontSize:22,fontWeight:FontWeight.w500))),
+    appBar:AppBar(centerTitle:true,leading:IconButton(icon:const Icon(Icons.arrow_back),onPressed:()=>Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Home()))),title:const Text('RS485 / MODBUS',style:TextStyle(fontSize:22,fontWeight:FontWeight.w500))),
     body:ListView(padding:const EdgeInsets.fromLTRB(20,8,20,20),children:[
       const Text('RS485 Device Management',style:TextStyle(fontSize:19,fontWeight:FontWeight.w600)),
       const SizedBox(height:8),
       Wrap(spacing:8,runSpacing:8,children:[
         OutlinedButton.icon(onPressed:scanInfo,icon:const Icon(Icons.search),label:const Text('SCAN FOR DEVICES')),
-        OutlinedButton.icon(onPressed:()=>configure(Rs485Device(slot:devices.indexWhere((x)=>!x.configured)+1)),icon:const Icon(Icons.add),label:const Text('ADD MANUALLY')),
+        OutlinedButton.icon(onPressed:devices.any((x)=>!x.configured)?(){configure(devices.firstWhere((x)=>!x.configured));}:null,icon:const Icon(Icons.add),label:const Text('ADD MANUALLY')),
         OutlinedButton.icon(onPressed:searchDrivers,icon:const Icon(Icons.manage_search),label:const Text('SEARCH DRIVERS')),
         OutlinedButton.icon(onPressed:candidateDrivers,icon:const Icon(Icons.list_alt),label:const Text('CANDIDATE DRIVERS')),
       ]),
       const SizedBox(height:8),const Info('Eight fixed Modbus slots. Different manufacturers are supported through verified driver profiles and documented register maps.'),
       const SizedBox(height:8),for(final d in devices)deviceCard(d),
     ]),
-    bottomNavigationBar:Nav(index:4,onTap:(i){
-      if(i==0)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Home()));
-      if(i==1)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Gsm()));
-      if(i==2)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Lora()));
-      if(i==3)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const MapPage()));
-      if(i==4)Navigator.pushReplacement(context,MaterialPageRoute(builder:(_)=>const Rs485Page()));
-    }),
+
   );
 }
