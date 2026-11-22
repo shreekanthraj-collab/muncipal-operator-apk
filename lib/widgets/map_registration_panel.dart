@@ -138,13 +138,11 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                       DropdownMenuItem(value: 'GSM', child: Text('GSM / LTE')),
                       DropdownMenuItem(value: 'LORA', child: Text('LoRa')),
                     ],
-                    onChanged: registrationToken != null
-                        ? null
-                        : (value) {
-                            if (value != null) {
-                              setDialogState(() => transportType = value);
-                            }
-                          },
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() => transportType = value);
+                      }
+                    },
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
@@ -186,16 +184,6 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                       child: Text(position.longitude.toStringAsFixed(6)),
                     ),
                   ),
-                  if (registrationToken != null) ...[
-                    const SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Scanned valve: ' + (scannedValveId ?? ''),
-                        style: const TextStyle(fontSize: 12, color: Colors.black54),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
