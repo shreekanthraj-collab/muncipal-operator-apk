@@ -574,6 +574,21 @@ class _Rs485PageState extends State<Rs485Page> {
     for(final x in [make,model,slave,baud,reg,count,measure,unit]){x.dispose();}
   }
 
+  void searchDrivers()=>showDialog<void>(context:context,builder:(ctx){
+    final query=TextEditingController();
+    return AlertDialog(title:const Text('Search Driver Catalogue'),content:Column(mainAxisSize:MainAxisSize.min,children:[
+      TextField(controller:query,decoration:const InputDecoration(labelText:'Manufacturer / model')),
+      const SizedBox(height:10),
+      const Info('Only verified driver profiles should appear here. The driver catalogue API is not connected in this APK branch yet.'),
+    ]),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('CLOSE'))]);
+  });
+
+  void candidateDrivers()=>showDialog<void>(context:context,builder:(ctx)=>AlertDialog(
+    title:const Text('Candidate Drivers'),
+    content:const Text('No candidate driver records are currently synchronized. Add a manufacturer/model and the verified Modbus register map when available. A slave address response alone does not identify the sensor.'),
+    actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('CLOSE'))],
+  ));
+
   void scanInfo()=>showDialog<void>(context:context,builder:(ctx)=>AlertDialog(
     title:const Text('Scan RS485 Devices'),
     content:const Text('A gateway scan can discover responding Modbus slave IDs. It cannot identify manufacturer/model or infer register maps. Live scan requires gateway/server discovery integration.'),
@@ -598,7 +613,14 @@ class _Rs485PageState extends State<Rs485Page> {
   @override Widget build(BuildContext context)=>Scaffold(
     appBar:AppBar(centerTitle:true,leading:IconButton(icon:const Icon(Icons.arrow_back),onPressed:()=>Navigator.maybePop(context)),title:const Text('RS485 / MODBUS',style:TextStyle(fontSize:22,fontWeight:FontWeight.w500))),
     body:ListView(padding:const EdgeInsets.fromLTRB(20,8,20,20),children:[
-      Row(children:[const Expanded(child:Text('RS485 Device Management',style:TextStyle(fontSize:19,fontWeight:FontWeight.w600))),OutlinedButton.icon(onPressed:scanInfo,icon:const Icon(Icons.search),label:const Text('SCAN'))]),
+      const Text('RS485 Device Management',style:TextStyle(fontSize:19,fontWeight:FontWeight.w600)),
+      const SizedBox(height:8),
+      Wrap(spacing:8,runSpacing:8,children:[
+        OutlinedButton.icon(onPressed:scanInfo,icon:const Icon(Icons.search),label:const Text('SCAN FOR DEVICES')),
+        OutlinedButton.icon(onPressed:()=>configure(Rs485Device(slot:devices.indexWhere((x)=>!x.configured)+1)),icon:const Icon(Icons.add),label:const Text('ADD MANUALLY')),
+        OutlinedButton.icon(onPressed:searchDrivers,icon:const Icon(Icons.manage_search),label:const Text('SEARCH DRIVERS')),
+        OutlinedButton.icon(onPressed:candidateDrivers,icon:const Icon(Icons.list_alt),label:const Text('CANDIDATE DRIVERS')),
+      ]),
       const SizedBox(height:8),const Info('Eight fixed Modbus slots. Different manufacturers are supported through verified driver profiles and documented register maps.'),
       const SizedBox(height:8),for(final d in devices)deviceCard(d),
     ]),
