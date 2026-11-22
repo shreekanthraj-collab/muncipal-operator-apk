@@ -114,7 +114,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(
-            registrationToken == null ? 'REGISTER BY VALVE ID' : 'REGISTER VALVE QR',
+            'REGISTER BY VALVE ID',
             style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
           ),
           content: SingleChildScrollView(
