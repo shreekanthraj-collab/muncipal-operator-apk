@@ -12,7 +12,7 @@ const Color kOrange = Color(0xFFFF8A00);
 
 final MunicipalApi municipalApi = MunicipalApi();
 
-void main() => runApp(const App());
+void main() => runApp(const MunicipalOperatorApp());
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -60,6 +60,10 @@ class App extends StatelessWidget {
       );
 }
 
+class MunicipalOperatorApp extends App {
+  const MunicipalOperatorApp({super.key});
+}
+
 class Login extends StatefulWidget {
   const Login({super.key});
   @override
@@ -86,7 +90,7 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> requestOtp() async {
-    final digits = phone.text.replaceAll(RegExp(r'\\D'), '');
+    final digits = phone.text.replaceAll(RegExp(r'\D'), '');
     if (digits.length < 10) {
       message('Enter the registered 10-digit mobile number.');
       return;
@@ -107,7 +111,7 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> verifyOtp() async {
-    final digits = phone.text.replaceAll(RegExp(r'\\D'), '');
+    final digits = phone.text.replaceAll(RegExp(r'\D'), '');
     if (digits.length < 10 || otp.text.trim().length != 6) {
       message('Enter the registered mobile number and 6-digit OTP.');
       return;
