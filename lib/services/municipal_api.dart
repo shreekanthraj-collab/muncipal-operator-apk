@@ -15,6 +15,7 @@ class MunicipalValve {
   final String status;
   final String zoneId;
   final String wardId;
+  final String valveType;
   final double? latitude;
   final double? longitude;
   final String? deviceId;
@@ -25,6 +26,7 @@ class MunicipalValve {
     required this.status,
     required this.zoneId,
     required this.wardId,
+    this.valveType = 'DISTRIBUTION',
     this.latitude,
     this.longitude,
     this.deviceId,
@@ -39,6 +41,7 @@ class MunicipalValve {
       status: (json['status'] ?? 'UNKNOWN').toString().toUpperCase(),
       zoneId: (json['zone_id'] ?? json['zone'] ?? '').toString(),
       wardId: (json['ward_id'] ?? json['ward'] ?? '').toString(),
+      valveType: _normalizeValveType(json['valve_type']),
       latitude: number(json['latitude']),
       longitude: number(json['longitude']),
       deviceId: json['device_id']?.toString(),
@@ -136,6 +139,81 @@ class MunicipalApi {
         .map((item) => MunicipalValve.fromJson(Map<String, dynamic>.from(item)))
         .where((item) => item.valveId.isNotEmpty)
         .toList(growable: false);
+  }
+
+
+  static String _normalizeValveType(dynamic value) {
+    final normalized = (value ?? 'DISTRIBUTION').toString().trim().toUpperCase();
+    return normalized == 'MAIN' ? 'MAIN' : 'DISTRIBUTION';
+  }
+
+  static void _validateValveType(String valveType) {
+    if (valveType != 'MAIN' && valveType != 'DISTRIBUTION') {
+      throw ArgumentError.value(
+        valveType,
+        'valveType',
+        'Must be MAIN or DISTRIBUTION',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> scanPreview(String registrationToken) async {
+    final result = await _request(
+      'GET',
+      '/api/v1/municipal/valves/scan-preview/${Uri.encodeComponent(registrationToken)}',
+      auth: true,
+    );
+    return Map<String, dynamic>.from(result as Map);
+  }
+
+  Future<Map<String, dynamic>> registerPlacement({
+    required String registrationToken,
+    required String wardId,
+    required String zoneId,
+    required double latitude,
+    required double longitude,
+    String valveType = 'DISTRIBUTION',
+  }) async {
+    _validateValveType(valveType);
+    final result = await _request(
+      'POST',
+      '/api/v1/municipal/valves/register-placement',
+      auth: true,
+      body: {
+        'registration_token': registrationToken,
+        'ward_id': wardId,
+        'zone_id': zoneId,
+        'valve_type': valveType,
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+    );
+    return Map<String, dynamic>.from(result as Map);
+  }
+
+  Future<Map<String, dynamic>> registerByValveId({
+    required String valveId,
+    required String wardId,
+    required String zoneId,
+    required double latitude,
+    required double longitude,
+    String valveType = 'DISTRIBUTION',
+  }) async {
+    _validateValveType(valveType);
+    final result = await _request(
+      'POST',
+      '/api/v1/municipal/valves/register-by-valve-id',
+      auth: true,
+      body: {
+        'valve_id': valveId,
+        'ward_id': wardId,
+        'zone_id': zoneId,
+        'valve_type': valveType,
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+    );
+    return Map<String, dynamic>.from(result as Map);
   }
 
   Future<Map<String, dynamic>> command(String valveId, String command) async {
