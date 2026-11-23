@@ -5,9 +5,14 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../services/municipal_api.dart';
 
 class MapRegistrationPanel extends StatefulWidget {
+  final MunicipalApi api;
   final Future<void> Function() onRegistered;
 
-  const MapRegistrationPanel({super.key, required this.onRegistered});
+  const MapRegistrationPanel({
+    super.key,
+    required this.api,
+    required this.onRegistered,
+  });
 
   @override
   State<MapRegistrationPanel> createState() => _MapRegistrationPanelState();
@@ -56,7 +61,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
       final token = await _scanToken();
       if (!mounted || token == null || token.trim().isEmpty) return;
 
-      final preview = await municipalApi.scanPreview(token.trim());
+      final preview = await widget.api.scanPreview(token.trim());
       if (!mounted) return;
 
       final valveId = (preview['valve_id'] ?? '').toString();
@@ -212,7 +217,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                       setDialogState(() => submitting = true);
                       try {
                         if (registrationToken != null) {
-                          await municipalApi.registerPlacement(
+                          await widget.api.registerPlacement(
                             registrationToken: registrationToken,
                             wardId: ward,
                             zoneId: zone,
@@ -222,7 +227,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                             valveType: valveType,
                           );
                         } else {
-                          await municipalApi.registerByValveId(
+                          await widget.api.registerByValveId(
                             valveId: valveId,
                             wardId: ward,
                             zoneId: zone,
