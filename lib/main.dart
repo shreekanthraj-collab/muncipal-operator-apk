@@ -298,7 +298,10 @@ class _HomeState extends State<Home> {
             if (tab == 3) {
               return Column(
                 children: [
-                  MapRegistrationPanel(onRegistered: refresh),
+                  MapRegistrationPanel(
+                    api: municipalApi,
+                    onRegistered: refresh,
+                  ),
                   Expanded(child: MapPage(valves: scoped)),
                 ],
               );
