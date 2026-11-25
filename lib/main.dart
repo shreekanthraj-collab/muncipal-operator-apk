@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'services/municipal_api.dart';
+import 'widgets/map_registration_panel.dart';
 
 const Color kBlue = Color(0xFF2B6F9F);
 const Color kPage = Color(0xFFF7F7FF);
@@ -294,7 +295,17 @@ class _HomeState extends State<Home> {
 
             if (tab == 1) return ValvePage(title: 'GSM / LTE Valve Control', valves: scoped.where((v) => !v.isLora).toList());
             if (tab == 2) return ValvePage(title: 'LoRa Valve Control', valves: scoped.where((v) => v.isLora).toList());
-            if (tab == 3) return MapPage(valves: scoped);
+            if (tab == 3) {
+              return Column(
+                children: [
+                  MapRegistrationPanel(
+                    api: municipalApi,
+                    onRegistered: refresh,
+                  ),
+                  Expanded(child: MapPage(valves: scoped)),
+                ],
+              );
+            }
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
               child: Card(
