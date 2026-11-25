@@ -392,6 +392,15 @@ class _ValvePageState extends State<ValvePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final id = selected?.valveId;
+      if (id != null) loadTarget(id);
+    });
+  }
+
+  @override
   void didUpdateWidget(covariant ValvePage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!widget.valves.any((v) => v.valveId == valveId)) valveId = null;
@@ -527,11 +536,11 @@ class _ValvePageState extends State<ValvePage> {
                   const Expanded(child: Text('Actual Valve Position', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.indigo))),
                   IconButton(onPressed: positionLoading ? null : () => loadPosition(valve.valveId), icon: const Icon(Icons.refresh), tooltip: 'Refresh position'),
                 ]),
-                Text('State: \${positionData?['position_status'] ?? 'UNKNOWN'}', style: const TextStyle(fontWeight: FontWeight.w700)),
-                Text('Actual: \${positionData?['actual_position_pct'] == null ? '—' : '\${positionData!['actual_position_pct']}%'}'),
-                Text('Requested: \${positionData?['target_pct'] == null ? '—' : '\${positionData!['target_pct']}%'}'),
-                Text('Last telemetry: \${positionData?['last_position_at'] ?? 'No position report received'}', style: const TextStyle(fontSize: 12)),
-                Text('Age: \${positionData?['age_seconds'] == null ? 'unknown' : '\${positionData!['age_seconds']} seconds'}', style: const TextStyle(fontSize: 12)),
+                Text('State: ${positionData?['position_status'] ?? 'UNKNOWN'}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text('Actual: ${positionData?['actual_position_pct'] == null ? '—' : '${positionData!['actual_position_pct']}%'}'),
+                Text('Requested: ${positionData?['target_pct'] == null ? '—' : '${positionData!['target_pct']}%'}'),
+                Text('Last telemetry: ${positionData?['last_position_at'] ?? 'No position report received'}', style: const TextStyle(fontSize: 12)),
+                Text('Age: ${positionData?['age_seconds'] == null ? 'unknown' : '${positionData!['age_seconds']} seconds'}', style: const TextStyle(fontSize: 12)),
                 if (positionLoading) const LinearProgressIndicator(),
               ]),
             ),
