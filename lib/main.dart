@@ -381,6 +381,8 @@ class _ValvePageState extends State<ValvePage> {
   int target = 0;
   bool busy = false;
   String? targetUpdatedAt;
+  Map<String, dynamic>? positionData;
+  bool positionLoading = false;
 
   MunicipalValve? get selected {
     for (final valve in widget.valves) {
@@ -402,6 +404,24 @@ class _ValvePageState extends State<ValvePage> {
       setState(() => target = (data['target_pct'] as num?)?.toInt() ?? 0);
     } catch (_) {
       // A missing target is a normal first-use state.
+    }
+    await loadPosition(id);
+  }
+
+  Future<void> loadPosition(String id) async {
+    if (positionLoading) return;
+    setState(() => positionLoading = true);
+    try {
+      final data = await municipalApi.getPosition(id);
+      if (!mounted || selected?.valveId != id) return;
+      setState(() => positionData = data);
+    } catch (e) {
+      if (mounted && selected?.valveId == id) {
+        setState(() => positionData = null);
+        showMessage('Position telemetry unavailable: $e');
+      }
+    } finally {
+      if (mounted) setState(() => positionLoading = false);
     }
   }
 
@@ -481,7 +501,7 @@ class _ValvePageState extends State<ValvePage> {
                       decoration: const InputDecoration(labelText: 'Registered Valve ID'),
                       items: widget.valves.map((v) => DropdownMenuItem(value: v.valveId, child: Text(v.valveId))).toList(),
                       onChanged: (id) {
-                        setState(() => valveId = id);
+                        setState(() { valveId = id; positionData = null; });
                         if (id != null) loadTarget(id);
                       },
                     ),
@@ -499,6 +519,23 @@ class _ValvePageState extends State<ValvePage> {
           ),
         ),
         if (valve != null) ...[
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  const Expanded(child: Text('Actual Valve Position', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.indigo))),
+                  IconButton(onPressed: positionLoading ? null : () => loadPosition(valve.valveId), icon: const Icon(Icons.refresh), tooltip: 'Refresh position'),
+                ]),
+                Text('State: \${positionData?['position_status'] ?? 'UNKNOWN'}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text('Actual: \${positionData?['actual_position_pct'] == null ? '—' : '\${positionData!['actual_position_pct']}%'}'),
+                Text('Requested: \${positionData?['target_pct'] == null ? '—' : '\${positionData!['target_pct']}%'}'),
+                Text('Last telemetry: \${positionData?['last_position_at'] ?? 'No position report received'}', style: const TextStyle(fontSize: 12)),
+                Text('Age: \${positionData?['age_seconds'] == null ? 'unknown' : '\${positionData!['age_seconds']} seconds'}', style: const TextStyle(fontSize: 12)),
+                if (positionLoading) const LinearProgressIndicator(),
+              ]),
+            ),
+          ),
           Card(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
