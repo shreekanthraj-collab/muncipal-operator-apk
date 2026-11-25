@@ -160,7 +160,7 @@ class MunicipalApi {
   Future<Map<String, dynamic>> getPosition(String valveId) async {
     final result = await _request(
       'GET',
-      '/api/v1/municipal/valves/\${Uri.encodeComponent(valveId)}/position',
+      '/api/v1/municipal/valves/${Uri.encodeComponent(valveId)}/position',
       auth: true,
     );
     return Map<String, dynamic>.from(result as Map);
