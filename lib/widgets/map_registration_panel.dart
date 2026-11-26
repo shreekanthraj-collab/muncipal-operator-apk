@@ -104,6 +104,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
     String? scannedTransport,
   }) async {
     final position = await _currentPosition();
+    final availableOhts = await widget.api.activeOhts();
     if (!mounted) return;
 
     final valveIdController = TextEditingController(text: scannedValveId ?? '');
@@ -111,6 +112,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
     final zoneController = TextEditingController();
     var transportType = scannedTransport ?? 'GSM';
     var valveType = 'DISTRIBUTION';
+    String? selectedOhtId;
     var submitting = false;
 
     final registered = await showDialog<bool>(
@@ -161,6 +163,20 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                       if (value != null) setDialogState(() => valveType = value);
                     },
                   ),
+                  if (valveType == 'MAIN') ...[
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      value: selectedOhtId,
+                      decoration: const InputDecoration(labelText: 'Select existing OHT (required for MAIN)'),
+                      items: availableOhts.map((oht) => DropdownMenuItem<String>(
+                        value: oht['oht_id']?.toString(),
+                        child: Text('${oht['oht_name'] ?? 'OHT'} — ${oht['ward_id'] ?? ''}/${oht['zone_id'] ?? ''}'),
+                      )).toList(),
+                      onChanged: availableOhts.isEmpty ? null : (value) => setDialogState(() => selectedOhtId = value),
+                    ),
+                    if (availableOhts.isEmpty)
+                      const Align(alignment: Alignment.centerLeft, child: Text('No active OHT available in your permitted ward/zone. Ask Company Admin to create one.', style: TextStyle(color: Colors.red, fontSize: 12))),
+                  ],
                   const SizedBox(height: 10),
                   TextField(
                     controller: wardController,
@@ -207,7 +223,8 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                       final valveId = valveIdController.text.trim();
 
                       if (ward.isEmpty || zone.isEmpty ||
-                          (registrationToken == null && valveId.isEmpty)) {
+                          (registrationToken == null && valveId.isEmpty) ||
+                          (valveType == 'MAIN' && selectedOhtId == null)) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Enter Valve ID, Ward ID and Zone ID.')),
                         );
@@ -225,6 +242,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                             longitude: position.longitude,
                             transportType: transportType,
                             valveType: valveType,
+                            ohtId: selectedOhtId,
                           );
                         } else {
                           await widget.api.registerByValveId(
@@ -235,6 +253,7 @@ class _MapRegistrationPanelState extends State<MapRegistrationPanel> {
                             longitude: position.longitude,
                             transportType: transportType,
                             valveType: valveType,
+                            ohtId: selectedOhtId,
                           );
                         }
                         if (dialogContext.mounted) {
