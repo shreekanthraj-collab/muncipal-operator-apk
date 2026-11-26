@@ -157,6 +157,17 @@ class MunicipalApi {
     }
   }
 
+  Future<List<Map<String, dynamic>>> activeOhts() async {
+    final result = await _request('GET', '/api/v1/municipal/ohts', auth: true);
+    if (result is! List) {
+      throw const ApiException(502, 'Unexpected OHT list response.');
+    }
+    return result.whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .where((item) => item['oht_id'] != null)
+        .toList(growable: false);
+  }
+
   Future<Map<String, dynamic>> scanPreview(String registrationToken) async {
     final result = await _request(
       'GET',
@@ -174,8 +185,15 @@ class MunicipalApi {
     required double longitude,
     required String transportType,
     String valveType = 'DISTRIBUTION',
+    String? ohtId,
   }) async {
     _validateValveType(valveType);
+    if (valveType == 'MAIN' && (ohtId == null || ohtId.isEmpty)) {
+      throw ArgumentError('Select an existing OHT for a MAIN valve.');
+    }
+    if (valveType == 'DISTRIBUTION' && ohtId != null) {
+      throw ArgumentError('DISTRIBUTION valves cannot be assigned to an OHT.');
+    }
     if (transportType != 'GSM' && transportType != 'LORA') {
       throw ArgumentError.value(transportType, 'transportType');
     }
@@ -188,6 +206,7 @@ class MunicipalApi {
         'ward_id': wardId,
         'zone_id': zoneId,
         'valve_type': valveType,
+        if (ohtId != null) 'oht_id': ohtId,
         'transport_type': transportType,
         'latitude': latitude,
         'longitude': longitude,
@@ -204,8 +223,15 @@ class MunicipalApi {
     required double longitude,
     required String transportType,
     String valveType = 'DISTRIBUTION',
+    String? ohtId,
   }) async {
     _validateValveType(valveType);
+    if (valveType == 'MAIN' && (ohtId == null || ohtId.isEmpty)) {
+      throw ArgumentError('Select an existing OHT for a MAIN valve.');
+    }
+    if (valveType == 'DISTRIBUTION' && ohtId != null) {
+      throw ArgumentError('DISTRIBUTION valves cannot be assigned to an OHT.');
+    }
     if (transportType != 'GSM' && transportType != 'LORA') {
       throw ArgumentError.value(transportType, 'transportType');
     }
@@ -218,6 +244,7 @@ class MunicipalApi {
         'ward_id': wardId,
         'zone_id': zoneId,
         'valve_type': valveType,
+        if (ohtId != null) 'oht_id': ohtId,
         'transport_type': transportType,
         'latitude': latitude,
         'longitude': longitude,
